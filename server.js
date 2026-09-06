@@ -1,9 +1,9 @@
 const express = require('express');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
-const { readTickets, writeTickets } = require('./ticketStore');
+const { readTickets, withTickets } = require('./ticketStore');
 const { readUpcomingEvents, findEventById } = require('./eventsStore');
-const { readState: readNavState, writeState: writeNavState } = require('./navigatorStore');
+const { readState: readNavState, withState: withNavState } = require('./navigatorStore');
 
 const PORT = process.env.PORT || 5190;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'hennessy123';
@@ -60,7 +60,6 @@ app.post('/api/tickets', async (req, res) => {
     event = upcoming[0] || null;
   }
 
-  const tickets = await readTickets();
   const ticket = {
     id: crypto.randomUUID(),
     token: crypto.randomBytes(16).toString('hex'),
@@ -76,8 +75,9 @@ app.post('/api/tickets', async (req, res) => {
     checkedInAt: null,
     createdAt: new Date().toISOString(),
   };
-  tickets.push(ticket);
-  await writeTickets(tickets);
+  await withTickets((tickets) => {
+    tickets.push(ticket);
+  });
 
   const qrDataUrl = await QRCode.toDataURL(ticket.token, { margin: 1, width: 260 });
   res.status(201).json({
@@ -104,25 +104,23 @@ app.get('/api/tickets', requireAdmin, async (req, res) => {
 
 app.post('/api/checkin', requireAdmin, async (req, res) => {
   const { token } = req.body || {};
-  const tickets = await readTickets();
-  const ticket = tickets.find((t) => t.token === token);
 
-  if (!ticket) {
-    return res.status(404).json({ ok: false, error: 'not_found' });
-  }
-  if (ticket.checkedIn) {
-    return res.status(409).json({
-      ok: false,
-      error: 'already_used',
-      name: ticket.name,
-      checkedInAt: ticket.checkedInAt,
-    });
-  }
+  const result = await withTickets((tickets) => {
+    const ticket = tickets.find((t) => t.token === token);
+    if (!ticket) return { status: 404, body: { ok: false, error: 'not_found' } };
+    if (ticket.checkedIn) {
+      return {
+        status: 409,
+        body: { ok: false, error: 'already_used', name: ticket.name, checkedInAt: ticket.checkedInAt },
+      };
+    }
 
-  ticket.checkedIn = true;
-  ticket.checkedInAt = new Date().toISOString();
-  await writeTickets(tickets);
-  res.json({ ok: true, name: ticket.name });
+    ticket.checkedIn = true;
+    ticket.checkedInAt = new Date().toISOString();
+    return { status: 200, body: { ok: true, name: ticket.name } };
+  });
+
+  res.status(result.status).json(result.body);
 });
 
 // Onsite walk-up sale (staff-operated "tap to pay" device). MOCK MODE like
@@ -139,7 +137,6 @@ app.post('/api/tickets/onsite', requireAdmin, async (req, res) => {
     event = upcoming[0] || null;
   }
 
-  const tickets = await readTickets();
   const now = new Date().toISOString();
   const ticket = {
     id: crypto.randomUUID(),
@@ -157,8 +154,9 @@ app.post('/api/tickets/onsite', requireAdmin, async (req, res) => {
     checkedInAt: now,
     createdAt: now,
   };
-  tickets.push(ticket);
-  await writeTickets(tickets);
+  await withTickets((tickets) => {
+    tickets.push(ticket);
+  });
 
   res.status(201).json({ id: ticket.id, name: ticket.name, eventName: ticket.eventName });
 });
@@ -174,7 +172,6 @@ app.post('/api/navigator/join', async (req, res) => {
   const { name } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name is required' });
 
-  const state = await readNavState();
   const member = {
     id: crypto.randomUUID(),
     name,
@@ -185,8 +182,9 @@ app.post('/api/navigator/join', async (req, res) => {
     checkedInAt: null,
     joinedAt: new Date().toISOString(),
   };
-  state.members.push(member);
-  await writeNavState(state);
+  await withNavState((state) => {
+    state.members.push(member);
+  });
 
   res.status(201).json({ memberId: member.id });
 });
@@ -197,66 +195,75 @@ app.post('/api/navigator/ping', async (req, res) => {
     return res.status(400).json({ error: 'memberId, lat, and lng are required' });
   }
 
-  const state = await readNavState();
-  const member = state.members.find((m) => m.id === memberId);
-  if (!member) return res.status(404).json({ error: 'not_found' });
+  const result = await withNavState((state) => {
+    const member = state.members.find((m) => m.id === memberId);
+    if (!member) return { status: 404, body: { error: 'not_found' } };
 
-  member.lat = lat;
-  member.lng = lng;
-  member.updatedAt = new Date().toISOString();
+    member.lat = lat;
+    member.lng = lng;
+    member.updatedAt = new Date().toISOString();
 
-  const bus = state.busLocation;
-  let distance = null;
-  let justCheckedIn = false;
-  if (bus.active && bus.lat != null && bus.lng != null) {
-    distance = metersBetween({ lat, lng }, bus);
-    if (distance <= CHECKIN_RADIUS_METERS && !member.checkedIn) {
-      member.checkedIn = true;
-      member.checkedInAt = member.updatedAt;
-      justCheckedIn = true;
+    const bus = state.busLocation;
+    let distance = null;
+    let justCheckedIn = false;
+    if (bus.active && bus.lat != null && bus.lng != null) {
+      distance = metersBetween({ lat, lng }, bus);
+      if (distance <= CHECKIN_RADIUS_METERS && !member.checkedIn) {
+        member.checkedIn = true;
+        member.checkedInAt = member.updatedAt;
+        justCheckedIn = true;
+      }
     }
-  }
 
-  await writeNavState(state);
-  res.json({
-    ok: true,
-    busSharing: !!(bus.active && bus.lat != null),
-    distanceMeters: distance == null ? null : Math.round(distance),
-    checkedIn: member.checkedIn,
-    justCheckedIn,
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        busSharing: !!(bus.active && bus.lat != null),
+        distanceMeters: distance == null ? null : Math.round(distance),
+        checkedIn: member.checkedIn,
+        justCheckedIn,
+      },
+    };
   });
+
+  res.status(result.status).json(result.body);
 });
 
 app.post('/api/navigator/panic', async (req, res) => {
   const { memberId, lat, lng } = req.body || {};
-  const state = await readNavState();
-  const member = state.members.find((m) => m.id === memberId);
-  if (!member) return res.status(404).json({ error: 'not_found' });
 
-  const alert = {
-    id: crypto.randomUUID(),
-    memberId,
-    memberName: member.name,
-    lat: typeof lat === 'number' ? lat : member.lat,
-    lng: typeof lng === 'number' ? lng : member.lng,
-    createdAt: new Date().toISOString(),
-    resolved: false,
-  };
-  state.alerts.push(alert);
-  await writeNavState(state);
+  const result = await withNavState((state) => {
+    const member = state.members.find((m) => m.id === memberId);
+    if (!member) return { status: 404, body: { error: 'not_found' } };
 
-  res.status(201).json(alert);
+    const alert = {
+      id: crypto.randomUUID(),
+      memberId,
+      memberName: member.name,
+      lat: typeof lat === 'number' ? lat : member.lat,
+      lng: typeof lng === 'number' ? lng : member.lng,
+      createdAt: new Date().toISOString(),
+      resolved: false,
+    };
+    state.alerts.push(alert);
+    return { status: 201, body: alert };
+  });
+
+  res.status(result.status).json(result.body);
 });
 
 app.post('/api/navigator/resolve', async (req, res) => {
   const { alertId } = req.body || {};
-  const state = await readNavState();
-  const alert = state.alerts.find((a) => a.id === alertId);
-  if (!alert) return res.status(404).json({ error: 'not_found' });
 
-  alert.resolved = true;
-  await writeNavState(state);
-  res.json({ ok: true });
+  const result = await withNavState((state) => {
+    const alert = state.alerts.find((a) => a.id === alertId);
+    if (!alert) return { status: 404, body: { error: 'not_found' } };
+    alert.resolved = true;
+    return { status: 200, body: { ok: true } };
+  });
+
+  res.status(result.status).json(result.body);
 });
 
 app.get('/api/navigator/status', async (req, res) => {
@@ -270,16 +277,16 @@ app.get('/api/navigator/status', async (req, res) => {
 // for hands-free check-in, and admin can watch it move in real time.
 
 app.post('/api/bus-location/start', requireAdmin, async (req, res) => {
-  const state = await readNavState();
-  state.busLocation.active = true;
-  await writeNavState(state);
+  await withNavState((state) => {
+    state.busLocation.active = true;
+  });
   res.json({ ok: true });
 });
 
 app.post('/api/bus-location/stop', requireAdmin, async (req, res) => {
-  const state = await readNavState();
-  state.busLocation.active = false;
-  await writeNavState(state);
+  await withNavState((state) => {
+    state.busLocation.active = false;
+  });
   res.json({ ok: true });
 });
 
@@ -289,11 +296,11 @@ app.post('/api/bus-location/ping', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'lat and lng are required' });
   }
 
-  const state = await readNavState();
-  state.busLocation.lat = lat;
-  state.busLocation.lng = lng;
-  state.busLocation.updatedAt = new Date().toISOString();
-  await writeNavState(state);
+  await withNavState((state) => {
+    state.busLocation.lat = lat;
+    state.busLocation.lng = lng;
+    state.busLocation.updatedAt = new Date().toISOString();
+  });
   res.json({ ok: true });
 });
 

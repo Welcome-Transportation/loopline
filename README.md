@@ -60,6 +60,14 @@ What's here:
   for any other staff viewing admin — shows "last updated Xs ago" and a
   "View Current Location on Map" link. Turning sharing off immediately
   stops new hands-free check-ins (verified via API).
+- **Reliability fix**: `ticketStore.js` and `navigatorStore.js` now
+  serialize every read/write through an in-process queue. Without this,
+  concurrent requests (many phones pinging at once, several purchases
+  landing together) could interleave and corrupt `data/navigator.json`
+  — this actually happened once during testing and crashed the server
+  with `Unexpected end of JSON input`. Stress-tested afterward with 40+
+  concurrent joins and a mix of pings/bus-location updates/ticket
+  purchases firing at once — no crash, no lost data.
 - `server.js` / `ticketStore.js` / `eventsStore.js` / `navigatorStore.js`
   — Express server (`npm start`) with the full API: `/api/events`,
   `/api/tickets` (+ `/api/tickets/onsite` for walk-ups), `/api/checkin`,
