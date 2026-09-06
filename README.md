@@ -40,12 +40,23 @@ npx serve . -l 5190
 
 ## Next checkpoints (not yet built, in rough order)
 
-1. Antonio's real bus photo(s)/video swapped in for the placeholder.
-2. Stripe ticket purchase flow (reuse patterns from
-   `welcome-transportation-hub/src/payments.js`).
-3. QR code generation on purchase + live check-in scanner that invalidates
-   a code once scanned.
-4. Background audio (Sweet Caroline) + Party-in-the-USA snippet at a
+1. Antonio's real bus photo(s)/video and brand graphics (poster, Mister
+   Hennessy logo, Red Rum Design wordmark, flags graphic, etc.) swapped in
+   for the placeholders — pending files from Antonio.
+2. Calendar of events page — lists upcoming Happy Tuesdays (and future
+   events) for people to pick from before buying a ticket. This is also
+   where the Party-in-the-USA snippet plays on open. Needed before
+   ticketing makes sense as more than one event exists.
+3. Stripe ticket purchase flow (reuse patterns from
+   `welcome-transportation-hub/src/payments.js`) — pre-purchase, generates
+   a QR code per ticket.
+4. Door/seller side of the app for staff on-site:
+   - QR scanner that checks a ticket in and invalidates the code so it
+     can't be reused.
+   - On-site sale flow for walk-ups who didn't pre-purchase — tap-to-pay
+     (NFC) through the same device, generating a ticket/QR on the spot.
+   - Basic admin view of tickets sold / checked in.
+5. Background audio (Sweet Caroline) + Party-in-the-USA snippet at a
    celebratory moment, once audio assets are provided.
-5. Flip-cup mini-game.
-6. Party Navigator safety module (buddy system, accountability tracking).
+6. Flip-cup mini-game.
+7. Party Navigator safety module (buddy system, accountability tracking).
