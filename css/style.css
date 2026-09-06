@@ -83,26 +83,26 @@ section h2 {
   color: var(--gray);
   margin: 0 0 12px;
 }
-.hero-title {
-  font-size: clamp(2.6rem, 9vw, 4.8rem);
-  color: var(--white);
-  text-shadow: 0 0 24px rgba(212, 175, 55, 0.35);
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .hero-sub {
   color: var(--gold-bright);
   font-size: 1.1rem;
-  margin: 12px 0 32px;
+  margin: 20px 0 32px;
 }
 
-.bus-photo-placeholder {
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  padding: 60px 20px;
-  color: var(--gray);
-  background: var(--bg-raised);
-  margin-bottom: 28px;
+.hero-media { margin-bottom: 8px; }
+.hero-poster {
+  max-width: 360px;
+  width: 100%;
+  border-radius: 14px;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.25);
 }
-.bus-photo-placeholder small { display: block; margin-top: 6px; font-size: 0.75rem; }
 
 .cta-btn {
   display: inline-block;

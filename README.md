@@ -58,5 +58,7 @@ npx serve . -l 5190
    - Basic admin view of tickets sold / checked in.
 5. Background audio (Sweet Caroline) + Party-in-the-USA snippet at a
    celebratory moment, once audio assets are provided.
-6. Flip-cup mini-game.
+6. Flip-cup mini-game — pass-and-play on one phone, players take turns,
+   whoever loses (fails to flip the cup) takes a shot (real-life, not
+   in-app).
 7. Party Navigator safety module (buddy system, accountability tracking).
