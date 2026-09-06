@@ -5,7 +5,7 @@ Ticketing app/site for Mister Hennessy's "Happy Tuesdays" party bus event
 party at Rum Jungle). Umbrella brand: **Red Rum Design**. Feeds exposure
 back to the parent company, Welcome Transportation.
 
-## Status: Checkpoint 5 — bus location comes from the driver's own phone
+## Status: Checkpoint 6 — crowdfunded event proposals + a real calendar grid
 
 What's here:
 
@@ -13,9 +13,32 @@ What's here:
   site with the real brand graphics (hero poster, flags, Mister Hennessy's
   photo), a ticket purchase form, the dare dice mini-feature, and a joke
   complaints section. **No background audio / no Party in the USA
-  snippet — descoped per Antonio.**
-- `events.html` / `js/events.js` — calendar of upcoming Tuesdays, each
-  with its own name + venue (edit `data/events.json` to change).
+  snippet — descoped per Antonio.** A calendar icon (top-left, always
+  visible) opens `events.html` from every page.
+- `events.html` / `js/events.js` / `css/calendar.css` — a real month-grid
+  calendar (prev/next month, click a day to see that event and buy) plus
+  the **crowdfunded proposal system**:
+  - Anyone can **propose an event** (name, venue, price, how many pledges
+    needed — default/minimum enforced server-side).
+  - "Voting" is a real (mock) purchase — a **pledge** — not just a click.
+    Progress bar shows pledges vs. threshold live.
+  - Reaching the threshold does **not** auto-activate it — it flips to
+    "reached" and waits for Antonio to activate from admin, so he keeps
+    control over what actually gets scheduled.
+  - Once activated, every pledge becomes a real ticket (with its own QR)
+    automatically; pledgers retrieve theirs on this page via a token kept
+    in their browser (no login).
+  - The **proposer** can set the event's date once activated (also shown
+    on this page, `localStorage`-authenticated by their own proposer
+    token) — Antonio can also set/override it from admin, since he owns
+    the actual bus schedule.
+  - Cancelling before activation is allowed by the proposer or admin.
+  - Verified the full lifecycle end-to-end: propose → pledge to threshold
+    → blocked from normal purchase pre-activation → admin activates
+    (tested via a real button click, not just the API) → pledges become
+    tickets → pledger retrieves their QR → proposer sets the date →
+    ticket records backfill that date → event shows correctly on the
+    calendar grid.
 - `sell.html` / `js/sell.js` — staff-only **walk-up sale / "tap to pay"**
   page for people who didn't pre-buy. Staff hand the customer's phone or
   card to tap; in MOCK MODE this just simulates a brief "reading…" pause
@@ -71,10 +94,12 @@ What's here:
 - `server.js` / `ticketStore.js` / `eventsStore.js` / `navigatorStore.js`
   — Express server (`npm start`) with the full API: `/api/events`,
   `/api/tickets` (+ `/api/tickets/onsite` for walk-ups), `/api/checkin`,
-  `/api/navigator/*` (join, ping, panic, resolve, status), and
-  `/api/bus-location/*` (start, stop, ping, status).
+  `/api/events/propose` + `/api/events/:id/{pledge,activate,set-date,
+  cancel,my-ticket}`, `/api/navigator/*` (join, ping, panic, resolve,
+  status), and `/api/bus-location/*` (start, stop, ping, status).
 - `admin.html` — password-gated: ticket list (which event, online vs.
-  walk-up, check-in status) AND the bus-location toggle/tracker above.
+  walk-up, check-in status), a "Proposed & Pending Events" panel
+  (activate/cancel/set-date), AND the bus-location toggle/tracker above.
 - `checkin.html` — password-gated door-staff QR scanner (camera via
   jsQR, manual fallback).
 - Data: `data/tickets.json` and `data/navigator.json` (now also holds
@@ -84,9 +109,11 @@ What's here:
 
 Not built yet:
 
-- Real Stripe charge for both pre-purchase and walk-up sale (currently
-  mock/auto-approved) — needs Antonio to create a Stripe account and get
-  a test key first.
+- Real Stripe charge for pre-purchase, walk-up sale, AND pledges
+  (currently all mock/auto-approved) — needs Antonio to create a Stripe
+  account and get a test key first. A pledge should eventually be a real
+  **authorize-now-capture-later** charge (Stripe supports this natively)
+  so it's genuinely held in escrow until activation, not just recorded.
 - Real card-present "tap" hardware/SDK integration (e.g. Stripe Terminal
   Tap to Pay) for the walk-up page — right now "tap" is a mocked pause,
   not an actual NFC read.
@@ -95,6 +122,9 @@ Not built yet:
 - Expected-back-by reminder banner (e.g. "bus is loading, you're not
   checked in yet") — the data (`checkedIn` per member) exists, but no
   countdown/reminder UI is built on top of it yet.
+- No refund path if a proposal is cancelled after pledges came in — fine
+  now since pledges aren't real charges yet, but needs real handling once
+  Stripe is wired (void/cancel the authorization).
 - Flip-cup mini-game — **descoped per Antonio, not needed.**
 
 ## Running it locally
@@ -113,9 +143,10 @@ generated each time you run `npm start` and printed to the terminal.
 
 ## Next checkpoints (not yet built, in rough order)
 
-1. Real Stripe Checkout + real tap-to-pay hardware integration (swap in
-   for mock mode — see `server.js` comments; requires Antonio to create a
-   Stripe account and get a test key first).
+1. Real Stripe Checkout, real escrow-style pledges (authorize/capture),
+   and real tap-to-pay hardware integration (swap in for mock mode — see
+   `server.js` comments; requires Antonio to create a Stripe account and
+   get a test key first).
 2. Expected-back-by reminder banner in the Party Navigator.
 3. Party Navigator polish: notify group members even when they don't
    have the page open (would need push notifications / SMS — bigger

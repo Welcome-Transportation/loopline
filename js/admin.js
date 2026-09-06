@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const loginView = document.getElementById('login-view');
   const busView = document.getElementById('bus-view');
+  const proposalsView = document.getElementById('proposals-view');
+  const adminProposalsList = document.getElementById('admin-proposals-list');
+  const proposalsRefreshBtn = document.getElementById('proposals-refresh-btn');
   const ticketsView = document.getElementById('tickets-view');
   const passwordInput = document.getElementById('password-input');
   const loginBtn = document.getElementById('login-btn');
@@ -38,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionStorage.removeItem('loopline_admin_password');
       loginView.hidden = false;
       busView.hidden = true;
+      proposalsView.hidden = true;
       ticketsView.hidden = true;
       loginError.hidden = false;
       return;
@@ -59,6 +63,82 @@ document.addEventListener('DOMContentLoaded', () => {
         </tr>`
       )
       .join('');
+  }
+
+  async function loadProposals() {
+    const res = await fetch('/api/events');
+    const events = await res.json();
+    const proposals = events.filter((e) => e.status === 'proposed' || e.status === 'reached');
+    const undated = events.filter((e) => e.status === 'confirmed' && !e.date);
+
+    if (!proposals.length && !undated.length) {
+      adminProposalsList.innerHTML = '<p class="nav-hint">Nothing pending right now.</p>';
+      return;
+    }
+
+    adminProposalsList.innerHTML = [...proposals, ...undated]
+      .map((e) => {
+        const pct = e.threshold ? Math.min(100, Math.round((e.pledgeCount / e.threshold) * 100)) : 100;
+        return `
+        <div class="proposal-card" data-event-id="${e.id}">
+          <div class="event-name">${e.name}</div>
+          <div class="event-venue">@ ${e.venue} — $${e.price}/ticket — ${e.status}</div>
+          ${
+            e.threshold
+              ? `<div class="proposal-progress-track"><div class="proposal-progress-fill" style="width:${pct}%"></div></div>
+                 <p class="nav-hint">${e.pledgeCount} of ${e.threshold} pledges</p>`
+              : ''
+          }
+          <div class="admin-proposal-actions">
+            ${
+              e.status !== 'confirmed'
+                ? `<button type="button" class="staff-btn-small activate-btn">Activate</button>
+                   <button type="button" class="staff-btn-small cancel-btn">Cancel</button>`
+                : `<form class="set-date-form">
+                     <input type="date" class="set-date-input" required />
+                     <button type="submit" class="staff-btn-small">Set Date</button>
+                   </form>`
+            }
+          </div>
+        </div>`;
+      })
+      .join('');
+
+    adminProposalsList.querySelectorAll('.activate-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const eventId = btn.closest('.proposal-card').dataset.eventId;
+        await fetch(`/api/events/${eventId}/activate`, {
+          method: 'POST',
+          headers: { 'x-admin-password': adminPassword },
+        });
+        loadProposals();
+      });
+    });
+
+    adminProposalsList.querySelectorAll('.cancel-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const eventId = btn.closest('.proposal-card').dataset.eventId;
+        await fetch(`/api/events/${eventId}/cancel`, {
+          method: 'POST',
+          headers: { 'x-admin-password': adminPassword },
+        });
+        loadProposals();
+      });
+    });
+
+    adminProposalsList.querySelectorAll('.set-date-form').forEach((form) => {
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const eventId = form.closest('.proposal-card').dataset.eventId;
+        const date = form.querySelector('.set-date-input').value;
+        await fetch(`/api/events/${eventId}/set-date`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+          body: JSON.stringify({ date }),
+        });
+        loadProposals();
+      });
+    });
   }
 
   async function refreshBusStatus() {
@@ -139,8 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loginError.hidden = true;
     loginView.hidden = true;
     busView.hidden = false;
+    proposalsView.hidden = false;
     ticketsView.hidden = false;
     loadTickets();
+    loadProposals();
     refreshBusStatus();
     setInterval(refreshBusStatus, 5000);
   }
@@ -150,12 +232,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') tryLogin();
   });
   refreshBtn.addEventListener('click', loadTickets);
+  proposalsRefreshBtn.addEventListener('click', loadProposals);
 
   if (adminPassword) {
     loginView.hidden = true;
     busView.hidden = false;
+    proposalsView.hidden = false;
     ticketsView.hidden = false;
     loadTickets();
+    loadProposals();
     refreshBusStatus();
     setInterval(refreshBusStatus, 5000);
   }

@@ -1,6 +1,6 @@
 [
-  { "id": "2026-09-08", "date": "2026-09-08", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12 },
-  { "id": "2026-09-15", "date": "2026-09-15", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12 },
-  { "id": "2026-09-22", "date": "2026-09-22", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12 },
-  { "id": "2026-09-29", "date": "2026-09-29", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12 }
+  { "id": "2026-09-08", "date": "2026-09-08", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12, "status": "confirmed" },
+  { "id": "2026-09-15", "date": "2026-09-15", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12, "status": "confirmed" },
+  { "id": "2026-09-22", "date": "2026-09-22", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12, "status": "confirmed" },
+  { "id": "2026-09-29", "date": "2026-09-29", "name": "Happy Tuesdays", "venue": "Rum Jungle", "price": 12, "status": "confirmed" }
 ]

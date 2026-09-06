@@ -4,13 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Upcoming Parties — Loopline</title>
-  <meta name="description" content="Pick which Tuesday you're riding — Mister Hennessy, the Real Party Bus." />
+  <meta name="description" content="Pick which Tuesday you're riding, or propose your own — Mister Hennessy, the Real Party Bus." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/navigator.css" />
+  <link rel="stylesheet" href="css/calendar.css" />
 </head>
 <body>
 
   <div class="santa-corner" title="Early Christmas from the Real Party Bus" aria-hidden="true">🎅</div>
+
+  <div class="calendar-corner">
+    <a class="calendar-btn" href="events.html" title="Calendar — upcoming &amp; proposed parties">📅</a>
+  </div>
 
   <div class="bulldog-corner">
     <a class="bulldog-btn" href="navigator.html" title="Party Navigator — buddy system &amp; panic button">
@@ -29,10 +34,48 @@
       <p class="eyebrow">Every week's a different vibe — same bus.</p>
     </section>
 
-    <section class="events-list-section">
-      <div id="events-list" class="events-list">
-        <p class="events-loading">Loading upcoming parties…</p>
+    <section class="calendar-section">
+      <div class="calendar-nav">
+        <button type="button" id="cal-prev" class="staff-btn-small">‹ Prev</button>
+        <h2 id="cal-month-label"></h2>
+        <button type="button" id="cal-next" class="staff-btn-small">Next ›</button>
       </div>
+      <div class="calendar-weekdays">
+        <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      </div>
+      <div id="calendar-grid" class="calendar-grid"></div>
+    </section>
+
+    <section id="event-detail" class="event-detail-panel" hidden></section>
+
+    <section id="undated-section" class="proposals-section" hidden>
+      <h2>Confirmed — Date Coming Soon</h2>
+      <p class="nav-sub">These hit their pledge threshold and got activated. The date isn't set yet.</p>
+      <div id="undated-list" class="proposals-list"></div>
+    </section>
+
+    <section class="proposals-section">
+      <h2>Propose a New Party</h2>
+      <p class="nav-sub">
+        Pitch an idea, get people to actually pledge $ toward it, and once
+        enough pledges come in it's reviewed for activation — no date until
+        that happens.
+      </p>
+
+      <button type="button" id="show-propose-form-btn" class="cta-btn">+ Propose an Event</button>
+
+      <form id="propose-form" class="purchase-form" hidden>
+        <input type="text" id="propose-name" placeholder="Event name (e.g. Water Wars)" required />
+        <input type="text" id="propose-venue" placeholder="Venue (optional)" />
+        <input type="number" id="propose-price" placeholder="Price per ticket (default $12)" min="1" />
+        <input type="number" id="propose-threshold" placeholder="Pledges needed (default 20)" min="3" />
+        <input type="text" id="propose-proposer-name" placeholder="Your name" required />
+        <input type="email" id="propose-proposer-email" placeholder="Your email" required />
+        <button type="submit" class="cta-btn">Submit Proposal</button>
+      </form>
+      <p id="propose-error" class="purchase-error" hidden>Something went wrong — try again.</p>
+
+      <div id="proposals-list" class="proposals-list"></div>
     </section>
   </main>
 

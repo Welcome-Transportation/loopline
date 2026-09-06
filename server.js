@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
 const { readTickets, withTickets } = require('./ticketStore');
-const { readUpcomingEvents, findEventById } = require('./eventsStore');
+const { readUpcomingEvents, withEvents, findEventById } = require('./eventsStore');
 const { readState: readNavState, withState: withNavState } = require('./navigatorStore');
 
 const PORT = process.env.PORT || 5190;
@@ -43,7 +43,20 @@ function requireAdmin(req, res, next) {
 
 app.get('/api/events', async (req, res) => {
   const events = await readUpcomingEvents();
-  res.json(events);
+  res.json(
+    events.map(({ id, date, name, venue, price, status, threshold, pledges }) => ({
+      id,
+      date,
+      name,
+      venue,
+      price,
+      status: status || 'confirmed',
+      threshold: threshold || null,
+      pledgeCount: pledges ? pledges.length : null,
+      // First names only — no need to expose pledger emails publicly.
+      pledgerNames: pledges ? pledges.map((p) => p.name) : null,
+    }))
+  );
 });
 
 // MOCK MODE: no Stripe key configured yet, so purchases are marked paid
@@ -58,9 +71,12 @@ app.post('/api/tickets', async (req, res) => {
   }
 
   let event = eventId ? await findEventById(eventId) : null;
+  if (event && event.status && event.status !== 'confirmed') {
+    return res.status(400).json({ error: 'event_not_confirmed' });
+  }
   if (!event) {
     const upcoming = await readUpcomingEvents();
-    event = upcoming[0] || null;
+    event = upcoming.find((e) => (e.status || 'confirmed') === 'confirmed') || null;
   }
 
   const ticket = {
@@ -162,6 +178,205 @@ app.post('/api/tickets/onsite', requireAdmin, async (req, res) => {
   });
 
   res.status(201).json({ id: ticket.id, name: ticket.name, eventName: ticket.eventName });
+});
+
+// --- Crowdfunded event proposals ---
+// Anyone can propose an event; it only becomes real once enough people
+// actually pledge money toward it (a pledge is a real mock-charge, same as
+// a normal ticket purchase — "voting" means paying, not just clicking a
+// button). Reaching the threshold doesn't auto-activate it: Antonio
+// reviews and activates from admin, at which point every pledge becomes a
+// real ticket. Whoever proposed it can set the date once activated —
+// admin can also set/override it, since he owns the actual bus schedule.
+const MIN_THRESHOLD = 3;
+
+app.post('/api/events/propose', async (req, res) => {
+  const { name, venue, price, threshold, proposerName, proposerEmail } = req.body || {};
+  if (!name || !proposerName) {
+    return res.status(400).json({ error: 'name and proposerName are required' });
+  }
+
+  const proposerToken = crypto.randomBytes(16).toString('hex');
+  const event = {
+    id: crypto.randomUUID(),
+    date: null,
+    name,
+    venue: venue || 'TBD',
+    price: Number(price) > 0 ? Number(price) : TICKET_PRICE,
+    status: 'proposed',
+    threshold: Math.max(MIN_THRESHOLD, Number(threshold) || 20),
+    pledges: [],
+    proposerName,
+    proposerEmail: proposerEmail || null,
+    proposerToken,
+    createdAt: new Date().toISOString(),
+  };
+
+  await withEvents((events) => {
+    events.push(event);
+  });
+
+  res.status(201).json({ id: event.id, proposerToken });
+});
+
+app.post('/api/events/:id/pledge', async (req, res) => {
+  const { name, email } = req.body || {};
+  if (!name || !email) {
+    return res.status(400).json({ error: 'name and email are required' });
+  }
+
+  const pledgerToken = crypto.randomBytes(16).toString('hex');
+  const result = await withEvents((events) => {
+    const event = events.find((e) => e.id === req.params.id);
+    if (!event) return { status: 404, body: { error: 'not_found' } };
+    if (event.status !== 'proposed' && event.status !== 'reached') {
+      return { status: 400, body: { error: 'not_open_for_pledges' } };
+    }
+
+    event.pledges.push({ name, email, pledgerToken, ticketId: null, createdAt: new Date().toISOString() });
+    if (event.pledges.length >= event.threshold) {
+      event.status = 'reached';
+    }
+
+    return {
+      status: 201,
+      body: {
+        pledgerToken,
+        pledgeCount: event.pledges.length,
+        threshold: event.threshold,
+        status: event.status,
+      },
+    };
+  });
+
+  res.status(result.status).json(result.body);
+});
+
+// Admin-only: converts every pledge into a real, checkable-in ticket and
+// marks the event confirmed. Allowed from 'proposed' too (not just
+// 'reached') so Antonio can override and greenlight early if he wants.
+app.post('/api/events/:id/activate', requireAdmin, async (req, res) => {
+  const eventResult = await withEvents((events) => {
+    const event = events.find((e) => e.id === req.params.id);
+    if (!event) return { status: 404, body: { error: 'not_found' } };
+    if (event.status === 'confirmed') return { status: 400, body: { error: 'already_activated' } };
+    if (event.status === 'cancelled') return { status: 400, body: { error: 'cancelled' } };
+
+    event.status = 'confirmed';
+    return { status: 200, body: { event } };
+  });
+
+  if (eventResult.status !== 200) {
+    return res.status(eventResult.status).json(eventResult.body);
+  }
+  const event = eventResult.body.event;
+
+  await withTickets((tickets) => {
+    for (const pledge of event.pledges) {
+      const ticket = {
+        id: crypto.randomUUID(),
+        token: crypto.randomBytes(16).toString('hex'),
+        name: pledge.name,
+        email: pledge.email,
+        price: event.price,
+        eventId: event.id,
+        eventName: event.name,
+        eventVenue: event.venue,
+        eventDate: event.date,
+        source: 'pledge',
+        paid: true,
+        checkedIn: false,
+        checkedInAt: null,
+        createdAt: new Date().toISOString(),
+      };
+      tickets.push(ticket);
+      pledge.ticketId = ticket.id;
+    }
+  });
+
+  // Pledges now carry a ticketId — persist that link.
+  await withEvents((events) => {
+    const e = events.find((ev) => ev.id === event.id);
+    if (e) e.pledges = event.pledges;
+  });
+
+  res.json({ ok: true, pledgesConverted: event.pledges.length });
+});
+
+app.post('/api/events/:id/set-date', async (req, res) => {
+  const { date, proposerToken } = req.body || {};
+  if (!date) return res.status(400).json({ error: 'date is required' });
+
+  const isAdmin = req.get('x-admin-password') === ADMIN_PASSWORD;
+
+  const result = await withEvents((events) => {
+    const event = events.find((e) => e.id === req.params.id);
+    if (!event) return { status: 404, body: { error: 'not_found' } };
+    if (event.status !== 'confirmed') return { status: 400, body: { error: 'not_confirmed_yet' } };
+    if (!isAdmin && event.proposerToken !== proposerToken) {
+      return { status: 403, body: { error: 'not_authorized' } };
+    }
+
+    event.date = date;
+    return { status: 200, body: { ok: true, date } };
+  });
+
+  if (result.status !== 200) return res.status(result.status).json(result.body);
+
+  // Tickets already issued from pledges were created before the date was
+  // known — backfill it so admin/check-in show the real date.
+  await withTickets((tickets) => {
+    for (const t of tickets) {
+      if (t.eventId === req.params.id) t.eventDate = date;
+    }
+  });
+
+  res.json(result.body);
+});
+
+app.post('/api/events/:id/cancel', async (req, res) => {
+  const { proposerToken } = req.body || {};
+  const isAdmin = req.get('x-admin-password') === ADMIN_PASSWORD;
+
+  const result = await withEvents((events) => {
+    const event = events.find((e) => e.id === req.params.id);
+    if (!event) return { status: 404, body: { error: 'not_found' } };
+    if (event.status === 'confirmed') return { status: 400, body: { error: 'already_activated' } };
+    if (!isAdmin && event.proposerToken !== proposerToken) {
+      return { status: 403, body: { error: 'not_authorized' } };
+    }
+
+    event.status = 'cancelled';
+    return { status: 200, body: { ok: true } };
+  });
+
+  res.status(result.status).json(result.body);
+});
+
+// A pledger's browser holds only a pledgerToken (no login) — this is how
+// they retrieve their real ticket/QR once the event they pledged to gets
+// activated.
+app.get('/api/events/:id/my-ticket', async (req, res) => {
+  const { pledgerToken } = req.query;
+  const event = await findEventById(req.params.id);
+  if (!event) return res.status(404).json({ error: 'not_found' });
+
+  const pledge = (event.pledges || []).find((p) => p.pledgerToken === pledgerToken);
+  if (!pledge) return res.status(404).json({ error: 'not_found' });
+  if (!pledge.ticketId) return res.json({ status: event.status, ready: false });
+
+  const tickets = await readTickets();
+  const ticket = tickets.find((t) => t.id === pledge.ticketId);
+  if (!ticket) return res.json({ status: event.status, ready: false });
+
+  const qrDataUrl = await QRCode.toDataURL(ticket.token, { margin: 1, width: 260 });
+  res.json({
+    ready: true,
+    qrDataUrl,
+    eventName: ticket.eventName,
+    eventVenue: ticket.eventVenue,
+    eventDate: ticket.eventDate,
+  });
 });
 
 // --- Party Navigator (buddy system / panic / hands-free bus check-in) ---
