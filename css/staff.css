@@ -1,7 +1,9 @@
+.staff-nav-links { display: flex; gap: 16px; }
 .staff-nav-link {
   color: var(--gold);
   font-size: 0.85rem;
   text-decoration: underline;
+  white-space: nowrap;
 }
 
 .staff-main {
@@ -77,3 +79,23 @@
 .manual-entry { margin-top: 20px; color: var(--gray); }
 .manual-entry summary { cursor: pointer; }
 .manual-entry input { display: block; margin: 12px auto 10px; }
+
+.tap-to-pay-btn {
+  width: 100%;
+  background: var(--gold);
+  color: #111;
+  border: none;
+  border-radius: 12px;
+  padding: 26px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.tap-to-pay-btn:active { transform: scale(0.97); }
+.tap-to-pay-btn.reading { animation: tap-pulse 0.9s ease infinite; opacity: 0.85; }
+@keyframes tap-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(212, 175, 55, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(212, 175, 55, 0.8); }
+}

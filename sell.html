@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Walk-Up Sale — Loopline</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/staff.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wordmark">WALK-UP SALE</div>
+    <nav class="staff-nav-links">
+      <a class="staff-nav-link" href="admin.html">Admin →</a>
+      <a class="staff-nav-link" href="checkin.html">Check-in →</a>
+    </nav>
+  </header>
+
+  <main class="staff-main">
+    <section id="login-view" class="staff-card">
+      <h2>Staff Login</h2>
+      <input type="password" id="password-input" placeholder="Admin password" />
+      <button type="button" id="login-btn" class="cta-btn">Log In</button>
+      <p id="login-error" class="purchase-error" hidden>Wrong password.</p>
+    </section>
+
+    <section id="sell-view" class="staff-card" hidden>
+      <h2>Sell a Ticket On-Site</h2>
+      <input type="text" id="buyer-name" placeholder="Buyer's name (optional)" />
+
+      <button type="button" id="tap-btn" class="tap-to-pay-btn">
+        <span id="tap-btn-label">TAP TO PAY — $12</span>
+      </button>
+      <p class="nav-hint">Hand the customer's phone or card to tap. (Mock mode — no real charge yet, see README.)</p>
+
+      <div id="sale-result" class="ticket-mock" hidden>
+        <div class="ticket-mock-header">✅ Sold &amp; Checked In</div>
+        <p id="sale-name" class="ticket-mock-footer"></p>
+        <span class="preview-tag">They're in — no ticket scan needed</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/sell.js"></script>
+</body>
+</html>

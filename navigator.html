@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Party Navigator — Loopline</title>
+  <meta name="description" content="Buddy system, panic button, and hands-free bus check-in for Happy Tuesdays." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/navigator.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wordmark">PARTY NAVIGATOR</div>
+    <a class="nav-link" href="index.html">← Back home</a>
+  </header>
+
+  <main class="nav-main">
+
+    <section id="join-view" class="nav-card">
+      <h2>Join Tonight's Group</h2>
+      <p class="nav-sub">So your friends can find you if something goes wrong — and so the bus knows you're back, no scanning needed.</p>
+      <input type="text" id="join-name" placeholder="Your first name" />
+      <button type="button" id="join-btn" class="cta-btn">Join</button>
+    </section>
+
+    <section id="main-view" class="nav-card" hidden>
+      <p class="nav-status" id="location-status">Getting your location…</p>
+
+      <button type="button" id="panic-btn" class="panic-btn">🚨 PANIC — Send My Location</button>
+      <p class="nav-hint">Alerts everyone in the group and opens your camera.</p>
+
+      <div id="camera-box" class="camera-box" hidden>
+        <video id="panic-camera" playsinline muted autoplay></video>
+        <p class="nav-hint">Camera's on to help document — this stays on your device, nothing is uploaded.</p>
+        <button type="button" id="stop-camera-btn" class="staff-btn-small">Stop Camera</button>
+      </div>
+
+      <h3 class="nav-section-title">Who's Out Tonight</h3>
+      <div id="members-list" class="members-list"></div>
+
+      <div id="alerts-list" class="alerts-list"></div>
+    </section>
+
+  </main>
+
+  <script src="js/navigator.js"></script>
+</body>
+</html>

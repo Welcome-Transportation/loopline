@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         (t) => `
         <tr>
           <td>${t.name}</td>
-          <td>${t.email}</td>
+          <td>${t.email || (t.source === 'onsite' ? 'walk-up' : '—')}</td>
           <td>${t.eventName || '—'}${t.eventDate ? ` (${t.eventDate})` : ''}</td>
           <td>${formatDate(t.createdAt)}</td>
           <td>${t.checkedIn ? `Checked in @ ${formatDate(t.checkedInAt)}` : 'Valid'}</td>
