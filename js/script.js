@@ -1,21 +1,32 @@
-// Loopline — static branded shell (checkpoint 1)
-// Ticketing, QR check-in, audio, and the mini-game are intentionally not
-// wired up yet. This file exists so later checkpoints have a place to grow
-// without restructuring the page.
+// Loopline — main landing page: ticket purchase form + dare dice.
 
 document.addEventListener('DOMContentLoaded', () => {
-  const cta = document.querySelector('.cta-btn');
-  if (cta) {
-    cta.addEventListener('click', (e) => {
-      e.preventDefault();
-      document.querySelector('#tickets').scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-
   const purchaseForm = document.getElementById('purchase-form');
   const purchaseResult = document.getElementById('purchase-result');
   const purchaseError = document.getElementById('purchase-error');
   const ticketQr = document.getElementById('ticket-qr');
+  const eventLabel = document.getElementById('purchase-event-label');
+
+  const eventId = new URLSearchParams(window.location.search).get('event');
+
+  function formatDate(isoDate) {
+    if (!isoDate) return '';
+    const d = new Date(isoDate + 'T00:00:00');
+    return d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+
+  if (eventLabel) {
+    fetch('/api/events')
+      .then((res) => res.json())
+      .then((events) => {
+        const match = eventId ? events.find((e) => e.id === eventId) : events[0];
+        if (match) {
+          eventLabel.textContent = `${match.name} — ${formatDate(match.date)} @ ${match.venue}`;
+          eventLabel.hidden = false;
+        }
+      })
+      .catch(() => {});
+  }
 
   if (purchaseForm) {
     purchaseForm.addEventListener('submit', async (e) => {
@@ -31,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/tickets', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email }),
+          body: JSON.stringify({ name, email, eventId }),
         });
 
         if (!res.ok) throw new Error('purchase failed');

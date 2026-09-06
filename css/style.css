@@ -72,8 +72,50 @@ section h2 {
   letter-spacing: 0.15em;
   color: var(--white);
 }
-.crown-badge { color: var(--gold); width: 52px; height: 52px; }
+.crown-badge { color: var(--gold); width: 52px; height: 52px; flex-shrink: 0; }
 .crown-icon { width: 100%; height: 100%; }
+.nav-link {
+  color: var(--gold);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* --- Events calendar --- */
+.events-hero { text-align: center; padding-top: 40px; }
+.events-hero h1 {
+  font-size: clamp(2rem, 7vw, 3rem);
+  color: var(--white);
+}
+.events-list-section { border-bottom: none; }
+.events-list {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+.events-loading { text-align: center; color: var(--gray); grid-column: 1 / -1; }
+.event-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--gold);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+.event-date { color: var(--gray); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.event-name {
+  font-family: "Impact", "Arial Black", sans-serif;
+  color: var(--gold);
+  font-size: 1.5rem;
+  margin: 8px 0 4px;
+}
+.event-venue { color: var(--white); margin-bottom: 18px; }
+.event-cta { display: inline-block; }
+
+.purchase-event-label {
+  color: var(--gold-bright);
+  margin: -8px 0 20px;
+  font-size: 0.95rem;
+}
 
 /* --- Hero --- */
 .hero { text-align: center; padding-top: 40px; }
