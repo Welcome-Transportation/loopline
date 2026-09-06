@@ -6,6 +6,7 @@
   <title>Loopline Admin — Happy Tuesdays</title>
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/staff.css" />
+  <link rel="stylesheet" href="css/navigator.css" />
 </head>
 <body>
   <header class="site-header">
@@ -22,6 +23,18 @@
       <input type="password" id="password-input" placeholder="Admin password" />
       <button type="button" id="login-btn" class="cta-btn">View Tickets</button>
       <p id="login-error" class="purchase-error" hidden>Wrong password.</p>
+    </section>
+
+    <section id="bus-view" class="staff-card" hidden>
+      <h2>Bus Location</h2>
+      <p id="bus-status" class="nav-status">Loading…</p>
+      <button type="button" id="bus-toggle-btn" class="cta-btn">Start Sharing My Location as the Bus</button>
+      <p class="nav-hint">
+        Only turn this on from the driver's phone, for the window riders
+        need to be found in (loading time) — while it's on, everyone's
+        Party Navigator checks them in automatically once they're near it.
+      </p>
+      <a id="bus-map-link" class="staff-btn-small" target="_blank" rel="noopener" href="#" hidden>View Current Location on Map</a>
     </section>
 
     <section id="tickets-view" class="staff-card" hidden>

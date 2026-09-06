@@ -9,10 +9,10 @@ const PORT = process.env.PORT || 5190;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'hennessy123';
 const TICKET_PRICE = 12;
 
-// PLACEHOLDER: approximate downtown Winter Garden, FL. Replace with the
-// exact pickup spot (Domino's, Herzog Road near Western Way) — right-click
-// the spot on Google Maps and copy the lat/lng shown there.
-const BUS_LOCATION = { lat: 28.5647, lng: -81.5862 };
+// The bus's location isn't fixed — it's Antonio's (the driver's) own phone
+// GPS, toggled on from the admin side only for the window it's needed
+// (loading time), and stored as live state in navigator.json. See the
+// /api/bus-location/* endpoints below.
 const CHECKIN_RADIUS_METERS = 150;
 
 function metersBetween(a, b) {
@@ -205,17 +205,26 @@ app.post('/api/navigator/ping', async (req, res) => {
   member.lng = lng;
   member.updatedAt = new Date().toISOString();
 
-  const distance = metersBetween({ lat, lng }, BUS_LOCATION);
-  const nowNearBus = distance <= CHECKIN_RADIUS_METERS;
+  const bus = state.busLocation;
+  let distance = null;
   let justCheckedIn = false;
-  if (nowNearBus && !member.checkedIn) {
-    member.checkedIn = true;
-    member.checkedInAt = member.updatedAt;
-    justCheckedIn = true;
+  if (bus.active && bus.lat != null && bus.lng != null) {
+    distance = metersBetween({ lat, lng }, bus);
+    if (distance <= CHECKIN_RADIUS_METERS && !member.checkedIn) {
+      member.checkedIn = true;
+      member.checkedInAt = member.updatedAt;
+      justCheckedIn = true;
+    }
   }
 
   await writeNavState(state);
-  res.json({ ok: true, distanceMeters: Math.round(distance), checkedIn: member.checkedIn, justCheckedIn });
+  res.json({
+    ok: true,
+    busSharing: !!(bus.active && bus.lat != null),
+    distanceMeters: distance == null ? null : Math.round(distance),
+    checkedIn: member.checkedIn,
+    justCheckedIn,
+  });
 });
 
 app.post('/api/navigator/panic', async (req, res) => {
@@ -253,6 +262,44 @@ app.post('/api/navigator/resolve', async (req, res) => {
 app.get('/api/navigator/status', async (req, res) => {
   const state = await readNavState();
   res.json(state);
+});
+
+// --- Live bus location (Antonio's phone GPS, toggled on/off from admin) ---
+// Staff turn this on only for the window it's needed (loading time). While
+// active, riders' navigator pings are checked against this live location
+// for hands-free check-in, and admin can watch it move in real time.
+
+app.post('/api/bus-location/start', requireAdmin, async (req, res) => {
+  const state = await readNavState();
+  state.busLocation.active = true;
+  await writeNavState(state);
+  res.json({ ok: true });
+});
+
+app.post('/api/bus-location/stop', requireAdmin, async (req, res) => {
+  const state = await readNavState();
+  state.busLocation.active = false;
+  await writeNavState(state);
+  res.json({ ok: true });
+});
+
+app.post('/api/bus-location/ping', requireAdmin, async (req, res) => {
+  const { lat, lng } = req.body || {};
+  if (typeof lat !== 'number' || typeof lng !== 'number') {
+    return res.status(400).json({ error: 'lat and lng are required' });
+  }
+
+  const state = await readNavState();
+  state.busLocation.lat = lat;
+  state.busLocation.lng = lng;
+  state.busLocation.updatedAt = new Date().toISOString();
+  await writeNavState(state);
+  res.json({ ok: true });
+});
+
+app.get('/api/bus-location', async (req, res) => {
+  const state = await readNavState();
+  res.json(state.busLocation);
 });
 
 app.listen(PORT, () => {

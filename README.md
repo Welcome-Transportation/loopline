@@ -5,7 +5,7 @@ Ticketing app/site for Mister Hennessy's "Happy Tuesdays" party bus event
 party at Rum Jungle). Umbrella brand: **Red Rum Design**. Feeds exposure
 back to the parent company, Welcome Transportation.
 
-## Status: Checkpoint 4 — walk-up tap-to-pay + Party Navigator safety module
+## Status: Checkpoint 5 — bus location comes from the driver's own phone
 
 What's here:
 
@@ -29,11 +29,13 @@ What's here:
   - **Join**: enter a first name once; a member id is kept in
     `localStorage` so the phone stays "you" across visits.
   - **Hands-free bus check-in**: while this page is open, the browser
-    reports location every ~20s. If you're within ~150m of the bus's
-    location, the server marks you checked in automatically — **no QR
-    scan, no manual input**, exactly as asked. (Verified via direct API
-    calls: a ping far from the bus stays unchecked, a ping at the bus's
-    coordinates flips `checkedIn: true`.)
+    reports location every ~20s. If you're within ~150m of the **live
+    bus location** (see below), the server marks you checked in
+    automatically — **no QR scan, no manual input**, exactly as asked.
+    (Verified via direct API calls: a ping far from the driver's location
+    stays unchecked, a ping at the driver's exact location flips
+    `checkedIn: true`; stopping bus-location sharing makes further
+    check-ins impossible until it's turned back on.)
   - **Panic button**: sends your last known location as an alert every
     other group member can see, and opens your own camera locally so you
     can start documenting. The video is **not uploaded anywhere** — it's
@@ -47,23 +49,30 @@ What's here:
     memberId in their browser can see the group's live locations. Fine
     for "everyone physically on tonight's bus," not appropriate for
     anything more sensitive without real auth.
+- **Live bus location, toggled from admin**: rather than a fixed pickup
+  coordinate, the bus's location IS the driver's (Antonio's) phone GPS.
+  On `admin.html`, a "Bus Location" panel has a **Start/Stop Sharing**
+  toggle — turned on only for the window riders need to be found in
+  (loading time). Whichever device clicks Start begins reporting its own
+  GPS (`navigator.geolocation.watchPosition`) to `/api/bus-location/ping`
+  every time it moves; that live point is what riders' hands-free
+  check-in compares against. The same panel doubles as a **live tracker**
+  for any other staff viewing admin — shows "last updated Xs ago" and a
+  "View Current Location on Map" link. Turning sharing off immediately
+  stops new hands-free check-ins (verified via API).
 - `server.js` / `ticketStore.js` / `eventsStore.js` / `navigatorStore.js`
   — Express server (`npm start`) with the full API: `/api/events`,
   `/api/tickets` (+ `/api/tickets/onsite` for walk-ups), `/api/checkin`,
-  and `/api/navigator/*` (join, ping, panic, resolve, status).
-- `admin.html` — password-gated table of tickets sold, which event,
-  online vs. walk-up, and check-in status.
+  `/api/navigator/*` (join, ping, panic, resolve, status), and
+  `/api/bus-location/*` (start, stop, ping, status).
+- `admin.html` — password-gated: ticket list (which event, online vs.
+  walk-up, check-in status) AND the bus-location toggle/tracker above.
 - `checkin.html` — password-gated door-staff QR scanner (camera via
   jsQR, manual fallback).
-- Data: `data/tickets.json` and `data/navigator.json` are gitignored
-  (real names/emails/live locations shouldn't be committed).
-  `data/events.json` **is** committed — it's just the schedule.
-
-**⚠️ Bus location is a placeholder.** `server.js` has `BUS_LOCATION` set
-to an approximate downtown Winter Garden, FL coordinate — **not** the
-actual Domino's on Herzog Road. Before relying on hands-free check-in for
-real: open Google Maps, right-click the exact pickup spot, copy the
-lat/lng shown, and paste it into `BUS_LOCATION` in `server.js`.
+- Data: `data/tickets.json` and `data/navigator.json` (now also holds
+  live bus location) are gitignored — real names/emails/live locations
+  shouldn't be committed. `data/events.json` **is** committed — it's
+  just the schedule.
 
 Not built yet:
 
@@ -98,13 +107,11 @@ Navigator: `/navigator.html`. Admin: `/admin.html`. Check-in:
 1. Real Stripe Checkout + real tap-to-pay hardware integration (swap in
    for mock mode — see `server.js` comments; requires Antonio to create a
    Stripe account and get a test key first).
-2. Confirm and set the real `BUS_LOCATION` coordinates (see warning
-   above).
-3. Expected-back-by reminder banner in the Party Navigator.
-4. Party Navigator polish: notify group members even when they don't
+2. Expected-back-by reminder banner in the Party Navigator.
+3. Party Navigator polish: notify group members even when they don't
    have the page open (would need push notifications / SMS — bigger
    lift), and a real "resolve" audit trail.
-5. Flesh out the broader Red Rum Design platform vision beyond Loopline
+4. Flesh out the broader Red Rum Design platform vision beyond Loopline
    (per the original project brief) once Loopline itself is solid.
 
 ## Remaining brand images (not yet placed)

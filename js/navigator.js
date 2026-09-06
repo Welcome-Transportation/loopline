@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         lastKnownPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        locationStatus.textContent = 'Sharing your location with the group.';
         try {
           const res = await fetch('/api/navigator/ping', {
             method: 'POST',
@@ -37,8 +36,12 @@ document.addEventListener('DOMContentLoaded', () => {
             body: JSON.stringify({ memberId, ...lastKnownPos }),
           });
           const data = await res.json();
-          if (data.justCheckedIn) {
+          if (data.checkedIn) {
             locationStatus.textContent = "✅ You're checked in — you're back at the bus!";
+          } else if (data.busSharing) {
+            locationStatus.textContent = "Sharing your location — you'll be checked in automatically once you're near the bus.";
+          } else {
+            locationStatus.textContent = 'Bus location sharing is off right now — check in with staff instead.';
           }
         } catch (err) {
           /* offline / spotty connection — will retry on next interval */

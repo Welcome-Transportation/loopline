@@ -3,14 +3,20 @@ const path = require('path');
 
 const DATA_FILE = path.join(__dirname, 'data', 'navigator.json');
 
-const EMPTY_STATE = { members: [], alerts: [] };
+const EMPTY_STATE = {
+  members: [],
+  alerts: [],
+  busLocation: { active: false, lat: null, lng: null, updatedAt: null },
+};
 
 async function readState() {
   try {
     const raw = await fs.readFile(DATA_FILE, 'utf8');
-    return JSON.parse(raw);
+    const state = JSON.parse(raw);
+    if (!state.busLocation) state.busLocation = { ...EMPTY_STATE.busLocation };
+    return state;
   } catch (err) {
-    if (err.code === 'ENOENT') return { ...EMPTY_STATE };
+    if (err.code === 'ENOENT') return JSON.parse(JSON.stringify(EMPTY_STATE));
     throw err;
   }
 }
