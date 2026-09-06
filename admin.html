@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loopline Admin — Happy Tuesdays</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/staff.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wordmark">LOOPLINE ADMIN</div>
+    <a class="staff-nav-link" href="checkin.html">Go to check-in scanner →</a>
+  </header>
+
+  <main class="staff-main">
+    <section id="login-view" class="staff-card">
+      <h2>Staff Login</h2>
+      <input type="password" id="password-input" placeholder="Admin password" />
+      <button type="button" id="login-btn" class="cta-btn">View Tickets</button>
+      <p id="login-error" class="purchase-error" hidden>Wrong password.</p>
+    </section>
+
+    <section id="tickets-view" class="staff-card" hidden>
+      <div class="staff-toolbar">
+        <h2>Tickets Sold</h2>
+        <button type="button" id="refresh-btn" class="staff-btn-small">Refresh</button>
+      </div>
+      <p id="tickets-summary" class="staff-summary"></p>
+      <div class="staff-table-wrap">
+        <table class="staff-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Purchased</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

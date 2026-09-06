@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Loopline Check-In — Happy Tuesdays</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/staff.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wordmark">LOOPLINE CHECK-IN</div>
+    <a class="staff-nav-link" href="admin.html">Go to admin →</a>
+  </header>
+
+  <main class="staff-main">
+    <section id="login-view" class="staff-card">
+      <h2>Door Staff Login</h2>
+      <input type="password" id="password-input" placeholder="Admin password" />
+      <button type="button" id="login-btn" class="cta-btn">Start Scanning</button>
+      <p id="login-error" class="purchase-error" hidden>Wrong password.</p>
+    </section>
+
+    <section id="scanner-view" class="staff-card" hidden>
+      <h2>Scan a Ticket</h2>
+      <video id="camera-feed" class="scanner-video" playsinline muted></video>
+      <canvas id="scan-canvas" hidden></canvas>
+      <div id="scan-result" class="scan-result">Point the camera at a QR code.</div>
+
+      <details class="manual-entry">
+        <summary>Enter code manually instead</summary>
+        <input type="text" id="manual-token" placeholder="Ticket code" />
+        <button type="button" id="manual-btn" class="staff-btn-small">Check In</button>
+      </details>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="js/checkin.js"></script>
+</body>
+</html>

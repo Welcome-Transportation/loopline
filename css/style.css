@@ -11,6 +11,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -96,12 +97,17 @@ section h2 {
   margin: 20px 0 32px;
 }
 
-.hero-media { margin-bottom: 8px; }
+.hero-media {
+  margin: 0 0 8px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
 .hero-poster {
-  max-width: 360px;
+  display: block;
   width: 100%;
-  border-radius: 14px;
-  box-shadow: 0 0 40px rgba(212, 175, 55, 0.25);
+  height: auto;
+  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.25);
 }
 
 .cta-btn {
@@ -135,25 +141,39 @@ section h2 {
 }
 .sign-welcome { font-size: 1.6rem; }
 .sign-dest { font-size: 2.2rem; }
-.sign-caption { margin-top: 18px; color: var(--white); font-size: 1rem; }
-
-/* --- Event details --- */
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
+.hennessy-portrait {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  margin: 22px auto 0;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.35);
 }
-.detail-card {
-  background: var(--bg-raised);
+.sign-caption { margin-top: 14px; color: var(--white); font-size: 1rem; }
+
+/* --- Ticket purchase --- */
+.purchase { text-align: center; }
+.purchase-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 320px;
+  margin: 0 auto;
+}
+.purchase-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 6px;
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 22px;
+  background: #000;
+  color: var(--white);
+  font-size: 1rem;
 }
-.detail-card h3 { color: var(--gold); font-size: 1.05rem; margin-bottom: 8px; }
-.detail-card p { margin: 0; color: var(--white); line-height: 1.5; }
+.purchase-error { color: var(--red); margin-top: 14px; }
 
-/* --- Ticket / QR preview --- */
-.ticket-preview { text-align: center; }
 .ticket-mock {
   display: inline-block;
   background: var(--bg-raised);
@@ -168,21 +188,15 @@ section h2 {
   letter-spacing: 0.1em;
   margin-bottom: 16px;
 }
-.qr-mock {
-  width: 120px;
-  height: 120px;
+.ticket-qr-img {
+  display: block;
+  width: 200px;
+  height: 200px;
   margin: 0 auto 16px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(4, 1fr);
-  gap: 4px;
   background: var(--white);
   padding: 8px;
   border-radius: 6px;
 }
-.qr-mock div { background: #000; }
-.qr-mock div:nth-child(3n) { background: transparent; }
-.qr-mock div:nth-child(5n) { background: transparent; }
 .ticket-mock-footer {
   font-style: italic;
   color: var(--gray);
@@ -201,8 +215,35 @@ section h2 {
 
 /* --- Flags --- */
 .flags-section { text-align: center; }
-.flag-us { font-size: 3.4rem; margin-bottom: 18px; }
-.flags-row { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; font-size: 1.9rem; }
+.flags-graphic { max-width: 480px; width: 100%; }
+
+/* --- Dare dice --- */
+.dice-section { text-align: center; }
+.dice-btn {
+  font-size: 3.5rem;
+  line-height: 1;
+  background: var(--bg-raised);
+  border: 2px solid var(--gold);
+  border-radius: 18px;
+  padding: 20px 26px;
+  cursor: pointer;
+  box-shadow: 0 0 24px rgba(212, 175, 55, 0.2);
+  transition: transform 0.15s ease;
+}
+.dice-btn:active { transform: scale(0.94); }
+.dice-btn.spinning { animation: dice-spin 0.7s ease-out; }
+@keyframes dice-spin {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(360deg) scale(1.1); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+.dice-result {
+  margin-top: 20px;
+  font-size: 1.3rem;
+  color: var(--gold-bright);
+  font-weight: 700;
+  min-height: 1.6em;
+}
 
 /* --- Complaints (joke section) --- */
 .complaints { text-align: center; }

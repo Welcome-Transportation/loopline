@@ -43,8 +43,8 @@
 
       <p class="hero-sub">Twelve bucks. One bus. Zero regrets.</p>
 
-      <a class="cta-btn" href="#tickets" aria-disabled="true">
-        Get Tickets — $12 <span class="cta-note">(coming soon)</span>
+      <a class="cta-btn" href="#purchase">
+        Get Tickets — $12
       </a>
     </section>
 
@@ -54,61 +54,43 @@
         <span class="sign-line sign-welcome">Welcome</span>
         <span class="sign-line sign-dest">Rum Jungle</span>
       </div>
+      <img class="hennessy-portrait" src="assets/images/mister-hennessy.jpg" alt="Mister Hennessy" />
       <p class="sign-caption">
         <strong>Mister Hennessy</strong>, the Real Party Bus
       </p>
     </section>
 
-    <!-- EVENT DETAILS -->
-    <section class="details">
-      <h2>How Tuesday Goes Down</h2>
-      <div class="details-grid">
-        <div class="detail-card">
-          <h3>Pickup — 10:40 PM</h3>
-          <p>Domino's on Herzog Road, near Western Way, Winter Garden.</p>
-        </div>
-        <div class="detail-card">
-          <h3>Rolling Through</h3>
-          <p>Flamingo Crossing — Disney College Program housing.</p>
-        </div>
-        <div class="detail-card">
-          <h3>The Party</h3>
-          <p>Straight to Rum Jungle. Bus rolls, music's up, we're outside.</p>
-        </div>
-      </div>
-    </section>
+    <!-- TICKET PURCHASE (real, functional — mock payment until a Stripe key is set) -->
+    <section id="purchase" class="purchase">
+      <h2>Get Your Ticket</h2>
 
-    <!-- SAMPLE TICKET / QR PREVIEW (decorative mockup only, not functional) -->
-    <section id="tickets" class="ticket-preview">
-      <h2>Your Ticket Will Look Like This</h2>
-      <div class="ticket-mock">
+      <form id="purchase-form" class="purchase-form">
+        <input type="text" id="buyer-name" placeholder="Your name" required />
+        <input type="email" id="buyer-email" placeholder="Your email" required />
+        <button type="submit" class="cta-btn">Pay $12</button>
+      </form>
+
+      <div id="purchase-result" class="ticket-mock" hidden>
         <div class="ticket-mock-header">HAPPY TUESDAYS</div>
-        <div class="qr-mock" aria-hidden="true">
-          <!-- decorative placeholder pattern, not a real QR code -->
-          <div></div><div></div><div></div><div></div>
-          <div></div><div></div><div></div><div></div>
-          <div></div><div></div><div></div><div></div>
-          <div></div><div></div><div></div><div></div>
-        </div>
+        <img id="ticket-qr" class="ticket-qr-img" alt="Your ticket QR code" />
         <p class="ticket-mock-footer">you filthy animals.</p>
-        <span class="preview-tag">Preview only — checkout not live yet</span>
+        <span class="preview-tag">Show this at the door — scans once</span>
       </div>
+
+      <p id="purchase-error" class="purchase-error" hidden>Something went wrong — try again.</p>
     </section>
 
     <!-- FLAGS -->
     <section class="flags-section">
-      <h2>Where Our Crowd Comes From</h2>
-      <div class="flag-us">🇺🇸</div>
-      <div class="flags-row">
-        <span title="Germany">🇩🇪</span>
-        <span title="Italy">🇮🇹</span>
-        <span title="France">🇫🇷</span>
-        <span title="Mexico">🇲🇽</span>
-        <span title="Colombia">🇨🇴</span>
-        <span title="Panama">🇵🇦</span>
-        <span title="Haiti">🇭🇹</span>
-        <span title="Brazil">🇧🇷</span>
-      </div>
+      <img class="flags-graphic" src="assets/images/flags.jpg"
+           alt="Flags of the United States, Germany, Italy, France, Mexico, Colombia, Panama, Haiti, and Brazil" />
+    </section>
+
+    <!-- DARE DICE -->
+    <section class="dice-section">
+      <h2>Spin the Dare Dice</h2>
+      <button type="button" class="dice-btn" id="dice-btn" aria-label="Spin the dare dice">🎲</button>
+      <p class="dice-result" id="dice-result">Tap the dice</p>
     </section>
 
     <!-- JOKE COMPLAINTS -->

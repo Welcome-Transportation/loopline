@@ -1,0 +1,13 @@
+{
+  "name": "loopline",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Loopline — Happy Tuesdays ticketing app (Mister Hennessy, the Real Party Bus)",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "qrcode": "^1.5.3"
+  }
+}
