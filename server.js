@@ -6,7 +6,10 @@ const { readUpcomingEvents, findEventById } = require('./eventsStore');
 const { readState: readNavState, withState: withNavState } = require('./navigatorStore');
 
 const PORT = process.env.PORT || 5190;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'hennessy123';
+// This repo is public — no fixed default password belongs in source
+// control. Set ADMIN_PASSWORD in .env for a stable one; otherwise a fresh
+// one is generated each run and printed to the console below.
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(6).toString('hex');
 const TICKET_PRICE = 12;
 
 // The bus's location isn't fixed — it's Antonio's (the driver's) own phone
@@ -311,4 +314,8 @@ app.get('/api/bus-location', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Loopline server running at http://localhost:${PORT}`);
+  if (!process.env.ADMIN_PASSWORD) {
+    console.log(`No ADMIN_PASSWORD set in .env — generated for this run: ${ADMIN_PASSWORD}`);
+    console.log('Set ADMIN_PASSWORD in .env (copy .env.example) for a password that stays the same across restarts.');
+  }
 });

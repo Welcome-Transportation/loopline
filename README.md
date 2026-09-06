@@ -106,9 +106,10 @@ npm start
 
 Then open `http://localhost:5190`. Calendar: `/events.html`. Party
 Navigator: `/navigator.html`. Admin: `/admin.html`. Check-in:
-`/checkin.html`. Walk-up sale: `/sell.html`. Default staff password:
-`hennessy123` (set `ADMIN_PASSWORD` in `.env` to change it — copy
-`.env.example` first).
+`/checkin.html`. Walk-up sale: `/sell.html`. **Staff password**: set
+`ADMIN_PASSWORD` in `.env` (copy `.env.example` first) for a password
+that stays the same across restarts — if you skip this, a random one is
+generated each time you run `npm start` and printed to the terminal.
 
 ## Next checkpoints (not yet built, in rough order)
 
